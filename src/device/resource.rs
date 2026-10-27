@@ -3209,15 +3209,14 @@ impl Device {
             },
             kind: MemoryInitKind::NeedsInitializedMemory,
         };
-        // Only a render pass's discard makes initialized memory uninitialized again, so a texture
-        // that no pass can attach, or write as storage, and that is initialized now stays so: its
-        // action would be checked, and found done, at every flush of every pass binding the group.
-        let can_lose_init = texture.desc.usage.intersects(
-            wgt::TextureUsages::RENDER_ATTACHMENT
-                | wgt::TextureUsages::TRANSIENT_ATTACHMENT
-                | wgt::TextureUsages::STORAGE_BINDING
-                | wgt::TextureUsages::STORAGE_ATOMIC,
-        );
+        // Only a render pass's discard of an attachment makes initialized memory uninitialized
+        // again, so a texture that can't be a render attachment (TRANSIENT_ATTACHMENT needs
+        // RENDER_ATTACHMENT too) and is initialized now stays so: its action would be checked, and
+        // found done, at every flush of every pass binding the group.
+        let can_lose_init = texture
+            .desc
+            .usage
+            .contains(wgt::TextureUsages::RENDER_ATTACHMENT);
         if can_lose_init
             || texture
                 .initialization_status
