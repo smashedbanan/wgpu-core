@@ -3198,7 +3198,7 @@ impl Device {
 
         let texture = &view.parent;
 
-        texture_init_actions.push(TextureInitTrackerAction {
+        let action = TextureInitTrackerAction {
             texture: texture.clone(),
             range: TextureInitRange {
                 mip_range: view.desc.range.mip_range(texture.desc.mip_level_count),
@@ -3208,7 +3208,25 @@ impl Device {
                     .layer_range(texture.desc.array_layer_count()),
             },
             kind: MemoryInitKind::NeedsInitializedMemory,
-        });
+        };
+        // Only a render pass's discard makes initialized memory uninitialized again, so a texture
+        // that no pass can attach, or write as storage, and that is initialized now stays so: its
+        // action would be checked, and found done, at every flush of every pass binding the group.
+        let can_lose_init = texture.desc.usage.intersects(
+            wgt::TextureUsages::RENDER_ATTACHMENT
+                | wgt::TextureUsages::TRANSIENT_ATTACHMENT
+                | wgt::TextureUsages::STORAGE_BINDING
+                | wgt::TextureUsages::STORAGE_ATOMIC,
+        );
+        if can_lose_init
+            || texture
+                .initialization_status
+                .read()
+                .check_action(&action)
+                .is_some()
+        {
+            texture_init_actions.push(action);
+        }
 
         Ok(hal::TextureBinding {
             view: view.try_raw(snatch_guard)?,
