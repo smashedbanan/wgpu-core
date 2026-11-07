@@ -32,4 +32,6 @@ left out.
 
 `emm-30.0.1-3` also carried gfx-rs/wgpu#10188 (small bind group descriptors stored inline) and
 gfx-rs/wgpu#10319 (one barrier for a batch of queue writes, recorded at submit). They are reverted
-here: in ExtractMeMaybe's A/B they gained no frame time, and on its heaviest map submits got slower.
+here: in ExtractMeMaybe's A/B neither gained measurable frame time on any map. The revert's commit
+message also says Streets' submits and frames got slower; a second A/B session did not reproduce
+that, and neither the eight nor the six changed frame time beyond the A/B's noise.
