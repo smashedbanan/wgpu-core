@@ -15,3 +15,20 @@ Apache-2.0 (`LICENSE.MIT`, `LICENSE.APACHE`).
   attachment makes initialised texture memory uninitialised again. Every flush of a
   bind group walks its init actions (`flush_bindings_helper`), so a bindless material slab of
   hundreds of textures re-checked all of them at every rebind, each check finding nothing to do.
+
+## Backports from upstream trunk
+
+Upstream fixes from after 30.0.1 that change only `wgpu-core`'s source and none of its public API,
+so `wgpu` 30.0.1 and Bevy 0.20.1 build against them unchanged. Each commit keeps its upstream
+author and names the trunk commit it came from; their CHANGELOG, test and Cargo.toml changes are
+left out.
+
+- gfx-rs/wgpu#9791: zero-initialise the padding at the end of a buffer allocation.
+- gfx-rs/wgpu#9960: drop `PendingSubmission`'s guards in reverse acquisition order (a deadlock).
+- gfx-rs/wgpu#10002: corner cases in initialised range tracking.
+- gfx-rs/wgpu#9958: a spurious assertion in `Device::maintain` when threads race to poll.
+- gfx-rs/wgpu#9959: `Buffer::unmap` failing with `NotMapped` when it races a `Buffer::map`.
+- gfx-rs/wgpu#10301: pending buffer maps no longer succeed after the device is lost.
+- gfx-rs/wgpu#10188: small bind group descriptors stored inline, not allocated.
+- gfx-rs/wgpu#10319: one barrier for a batch of `Queue::write_buffer`/`write_texture` calls in
+  place of one per call.
