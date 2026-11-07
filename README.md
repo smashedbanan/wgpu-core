@@ -29,6 +29,7 @@ left out.
 - gfx-rs/wgpu#9958: a spurious assertion in `Device::maintain` when threads race to poll.
 - gfx-rs/wgpu#9959: `Buffer::unmap` failing with `NotMapped` when it races a `Buffer::map`.
 - gfx-rs/wgpu#10301: pending buffer maps no longer succeed after the device is lost.
-- gfx-rs/wgpu#10188: small bind group descriptors stored inline, not allocated.
-- gfx-rs/wgpu#10319: one barrier for a batch of `Queue::write_buffer`/`write_texture` calls in
-  place of one per call.
+
+`emm-30.0.1-3` also carried gfx-rs/wgpu#10188 (small bind group descriptors stored inline) and
+gfx-rs/wgpu#10319 (one barrier for a batch of queue writes, recorded at submit). They are reverted
+here: in ExtractMeMaybe's A/B they gained no frame time, and on its heaviest map submits got slower.

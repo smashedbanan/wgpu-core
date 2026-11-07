@@ -1012,9 +1012,13 @@ impl Buffer {
                         dst_offset: 0,
                         size: staging_buffer.size,
                     });
-                    // The staging buffer's `MAP_WRITE` -> `COPY_SRC` transition
-                    // is hoisted to the front of the batch by
-                    // `PendingWrites::consume`, below.
+                    let transition_src = hal::BufferBarrier {
+                        buffer: staging_buffer.raw(),
+                        usage: hal::StateTransition {
+                            from: wgt::BufferUses::MAP_WRITE,
+                            to: wgt::BufferUses::COPY_SRC,
+                        },
+                    };
                     let transition_dst = hal::BufferBarrier::<dyn hal::DynBuffer> {
                         buffer: raw_buf,
                         usage: hal::StateTransition {
@@ -1025,7 +1029,7 @@ impl Buffer {
                     let mut pending_writes = queue.pending_writes.lock();
                     let encoder = pending_writes.activate();
                     unsafe {
-                        encoder.transition_buffers(&[transition_dst]);
+                        encoder.transition_buffers(&[transition_src, transition_dst]);
                         // Buffers allocate at least `COPY_BUFFER_ALIGNMENT` bytes, so
                         // there's always something to copy here.
                         encoder.copy_buffer_to_buffer(
